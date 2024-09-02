@@ -1,6 +1,9 @@
 import { useEffect, useReducer } from "react";
 import Header from "./Header";
 import Main from "./Main";
+import Loader from "./Loader";
+import Error from "./Error";
+import StarScreen from "./StarScreen";
 
 const initialState = {
   questions: [],
@@ -18,21 +21,27 @@ function reducer(state, action) {
 }
 
 export default function App() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [{ questions, status }, dispatch] = useReducer(reducer, initialState);
+
+  const numQuestions = questions.length;
 
   useEffect(function () {
     fetch("http://localhost:9000/questions")
       .then((res) => res.json())
-      .then((data) => dispatch({ type: "dataReceived", payload: data }))
+      .then((data) => {
+        console.log("Data fetched successfully:", data); // 调试信息
+        dispatch({ type: "dataReceived", payload: data });
+      })
       .catch((err) => dispatch({ type: "dataFailed" }));
-  });
+  }, []);
 
   return (
     <div className="app">
       <Header />
+      <Main>{status === "loading" && <Loader />}</Main>
+      <Main>{status === "error" && <Error />}</Main>
       <Main>
-        <p>1/15</p>
-        <p>Question</p>
+        {status === "ready" && <StarScreen numQuestions={numQuestions} />}
       </Main>
     </div>
   );
